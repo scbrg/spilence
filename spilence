@@ -2,17 +2,37 @@
 set -e
 set -u
 
+usage() {
+    printf 'Usage: %s [<-h|-help>] [<-s|-sink> <SINK>]\n' "$(basename "$0")"
+}
+
+help() {
+    printf '\n'
+    printf ' Mutes PulseAudio sink in use by Spotify when Spotify is playing '
+    printf 'an ad.\n'
+    printf ' %s should automatically detect the correct ' "$(basename "$0")"
+    printf 'sink but it can also be set with the -sink option.\n'
+}
+
 find_sink_no() {
     pactl list sink-inputs | awk '
-/\tSink: / {SINK=$2}
-/\t\tmedia.name = "Spotify"/ {exit}
+/\tSink: / {
+    SINK=$2
+}
+
+/\t\tmedia.name = "Spotify"/ {
+    exit
+}
+
 END {print SINK}
 '
 }
 
 find_sink_name() {
     pactl list short sinks | awk -v SINK="$(find_sink_no)" '
-$1 ~ SINK { print $2 }
+$1 ~ SINK {
+    print $2
+}
 '
 }
 
@@ -30,6 +50,7 @@ function report() {
     STATE="SONG"
     report()
 }
+
 /spotify:ad:/ {
     STATE="AD"
     report()
@@ -39,16 +60,23 @@ function report() {
 
 SINK="$(find_sink_name)"
 
+
 while [ $# -gt 0 ]; do
     ARG="$1"
     shift
     case "$ARG" in
+        -h|-help)
+            usage
+            help
+            exit 0
+            ;;
         -s|-sink)
             SINK="$1"
             shift
             ;;
         *)
             printf 'Unrecognized argument: %s\n' "$ARG"
+            usage
             exit 1
             ;;
     esac
@@ -57,6 +85,7 @@ done
 printf 'Sink is %s\n' "$SINK"
 
 monitor | while read -r STATUS; do
+
     if [ "$STATUS" = "AD" ]; then
         printf 'Muting sink %s\n' "$SINK"
         pactl set-sink-mute "$SINK" 1
@@ -64,4 +93,5 @@ monitor | while read -r STATUS; do
         printf 'Unmuting sink %s\n' "$SINK"
         pactl set-sink-mute "$SINK" 0
     fi
+
 done
