@@ -20,6 +20,9 @@ uninstall:
 clean:
 	$(RM) .tested
 
+README.html: README.md
+	markdown $< > $@
+
 .tested: $(SOURCE)
 	checkbashisms $^
 	shellcheck $^
