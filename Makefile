@@ -19,6 +19,7 @@ uninstall:
 .PHONY: clean
 clean:
 	$(RM) .tested
+	$(RM) README.html
 
 README.html: README.md
 	markdown $< > $@
