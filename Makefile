@@ -9,7 +9,9 @@ all: test install
 test: .tested
 
 .PHONY: install
-install: $(SOURCE)
+install: $(TARGET)
+
+$(TARGET): $(SOURCE)
 	install -m 755 $(SOURCE) $(TARGET)
 
 .PHONY: uninstall
